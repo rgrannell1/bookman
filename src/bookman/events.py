@@ -1,41 +1,36 @@
 """The Event type: the single unit of emitted telemetry data in bookman."""
 
-from typing import Literal, NamedTuple
-
-from bookman.primitives import Dims, Duration, Primitive, Timestamp, Unit
-
-type EventKind = Literal["span", "point"]
-"""Whether an event is a point observation or a completed span with a duration."""
-
-# seconds per unit — multiply (until - at) by the factor for the requested unit
-_UNIT_FACTORS: dict[Unit, float] = {
-    "s": 1.0,
-    "ms": 1_000.0,
-    "us": 1_000_000.0,
-    "ns": 1_000_000_000.0,
-}
+from typing import NamedTuple
+from bookman.primitives import Dims, Duration, Primitive, Timestamp, TimeUnit
+from bookman.bookman_types import EventKind
+from bookman.constants import _TIME_UNIT_FACTORS
 
 
 class Event(NamedTuple):
-    """A flat, immutable record representing one emitted telemetry observation.
-
-    at    — when the observation was made
-    until — when it ended; equal to at for point events, greater for spans
-    dims  — named dimensions for grouping and filtering (id, parent, tag, unit, etc.)
-    kind  — set by constructors in create.py; 'point' or 'span'
-    value — the measured primitive; absent for structural/lifecycle events"""
-
+    # When the event started
     at: Timestamp
+    # When the event ended
     until: Timestamp
+    # Dimensions we can group and filter along
     dims: Dims
+    # Whether the event is a point observation or a completed span with a duration
     kind: EventKind
+    # The value we carry, optionally; sometimes the event is the value itself
     value: Primitive | None = None
 
     def dim(self, key: str, default: str = "") -> str:
         """Return the first value for a dimension key, or default if absent or empty."""
-        values = self.dims.get(key)
-        return values[0] if values else default
 
-    def duration(self, unit: Unit = "s") -> Duration:
+        values = self.dims.get(key)
+        return values[0] if values else default # TODO this is suspect
+
+    def duration(self, unit: TimeUnit = "s") -> Duration:
         """Elapsed time in the given unit. Zero for point events."""
-        return (self.until - self.at) * _UNIT_FACTORS[unit]
+
+        if self.kind == "point":
+            return 0.0
+
+        if unit not in _TIME_UNIT_FACTORS:
+            raise ValueError(f"Invalid time unit: {unit}")
+
+        return (self.until - self.at) * _TIME_UNIT_FACTORS[unit]
