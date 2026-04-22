@@ -1,10 +1,13 @@
-from typing import NamedTuple, NewType
+from typing import Literal, NamedTuple, NewType
 
 type Timestamp = float
 """Seconds since epoch."""
 
 type Duration = float
 """Elapsed time in seconds, computed as until - at."""
+
+type Unit = Literal["s", "ms", "us", "ns"]
+"""Time unit for duration calculations."""
 
 type Label = str
 """A dimension key, e.g. 'id', 'tag', 'unit'."""

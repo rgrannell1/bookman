@@ -6,14 +6,16 @@ from bookman.events import Event
 from bookman.primitives import Dims, Primitive, Timestamp
 
 
-def point(value: Primitive, dims: Dims, at: Timestamp | None = None) -> Event:
+def point(
+    dims: Dims, at: Timestamp | None = None, value: Primitive | None = None
+) -> Event:
     """Construct a point event, defaulting to the current time."""
+    resolved = time.time() if at is None else at
+    return Event(at=resolved, until=resolved, dims=dims, kind="point", value=value)
 
-    resolved = Timestamp(time.time()) if at is None else at
-    return Event(at=resolved, until=resolved, value=value, dims=dims)
 
-
-def span(value: Primitive, dims: Dims, at: Timestamp, until: Timestamp) -> Event:
+def span(
+    dims: Dims, at: Timestamp, until: Timestamp, value: Primitive | None = None
+) -> Event:
     """Construct a span event over an explicit time range."""
-
-    return Event(at=at, until=until, value=value, dims=dims)
+    return Event(at=at, until=until, dims=dims, kind="span", value=value)
