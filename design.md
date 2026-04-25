@@ -53,18 +53,16 @@ instead.
 
 ```
 Aggregator M R = (insert : Event → M,  combine : M → M → M,  empty : M,  extract : M → R)
-
-fold agg xs = agg.extract (fold agg.combine agg.empty (map agg.insert xs))
 ```
 
 Non-commutative monoids are permitted — ordered aggregations (last-seen value, message sequences,
 categorical transitions) are valid. This library targets sub-gigabyte in-process aggregations where
 commutativity is not required.
 
-`groupBy` plus fold is sufficient for all keyed breakdowns (per job, per tag, per identifier):
+`groupBy` plus stream is sufficient for all keyed breakdowns (per job, per tag, per identifier):
 
 ```
-groupBy : (Event → K) → Aggregator M R → [Event] → Map K R
+groupBy : (Event → K) → Aggregator M R → Generator[Event, None, Map K R]
 ```
 
 Common projections for `groupBy`:
@@ -120,6 +118,23 @@ insert = ev -> (ev.at, ev.value)
 -- rate from delta counters
 filter (ev -> ev.value is Delta) |> sum |> per_second
 ```
+
+## Runners
+
+`stream` is a generator combinator — it wraps any aggregator and accepts events one at a time,
+yielding an updated result after each one. Closing the generator finalises the accumulator.
+
+```
+stream : Aggregator M R → Generator[Event, None, R]
+
+stream agg =
+  let step acc ev = agg.combine acc (agg.insert ev)
+  let run  acc    = yield (agg.extract acc); run (step acc (receive))
+  run agg.empty
+```
+
+In Python terms, `stream(agg)` returns a generator. The caller sends events in with `.send(event)`,
+receives the current result back after each send, and calls `.close()` when done.
 
 ## Results
 

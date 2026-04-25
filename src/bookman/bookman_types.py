@@ -49,3 +49,13 @@ type EventKind = Literal["span", "point"]
 # Aggregator metadata
 type Temporality = Literal["delta", "cumulative"]
 """Whether an aggregated result represents a change since last export (delta) or a running total (cumulative)."""
+
+# Aggregation result types — stable dispatch targets for exporters
+class Scalar(NamedTuple):
+    """A single numeric measurement, e.g. a count or gauge reading."""
+    value: float
+
+
+class Series(NamedTuple):
+    """A time-ordered sequence of (timestamp, value) pairs."""
+    points: list[tuple[Timestamp, float]]

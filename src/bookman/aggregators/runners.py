@@ -1,24 +1,56 @@
-"""Runners that execute an Aggregator over a collection of Events."""
+"""Runners that execute an Aggregator over a stream of Events.
 
-from collections import defaultdict
-from collections.abc import Callable, Iterable
-from functools import reduce
+The streaming runners are primary — they yield an updated result after each event.
+The batch runners (fold, group_by) are convenience wrappers that return the final value.
+"""
+
+from collections.abc import Callable, Generator, Iterable
 
 from bookman.events import Event
 from bookman.aggregators.aggregator import Aggregator
 
 
-def fold[M, R](agg: Aggregator[M, R], events: Iterable[Event]) -> R:
-    """We take an aggregator and a sequence of events. And:
-    - Lift each event into the accumulator type using the aggregator's insert function.
-    - Combine the accumulators using the aggregator's combine function.
+def stream[M, R](agg: Aggregator[M, R], events: Iterable[Event]) -> Generator[R, None, None]:
+    """Yield an updated result after each event, maintaining a running accumulator.
 
-    It's a monoidal reduction, we pull back out the result using extract. So,
-    like stock reduce with pre and post processing.
+    This is the primary runner. fold is derived from it.
     """
 
-    acc = reduce(agg.combine, (agg.insert(ev) for ev in events), agg.empty())
+    acc = agg.empty()
+    for ev in events:
+        acc = agg.combine(acc, agg.insert(ev))
+        yield agg.extract(acc)
+
+
+def fold[M, R](agg: Aggregator[M, R], events: Iterable[Event]) -> R:
+    """Return the final aggregated result after all events have been processed.
+
+    Equivalent to last(stream(agg, events)). Returns the identity result for an empty stream.
+    """
+
+    acc = agg.empty()
+    for ev in events:
+        acc = agg.combine(acc, agg.insert(ev))
     return agg.extract(acc)
+
+
+def stream_group_by[M, R, K](
+    key_fn: Callable[[Event], K],
+    agg: Aggregator[M, R],
+    events: Iterable[Event],
+) -> Generator[dict[K, R], None, None]:
+    """Yield an updated per-key result dict after each event, maintaining a running accumulator per key.
+
+    This is the primary grouped runner. group_by is derived from it.
+    """
+
+    groups: dict[K, M] = {}
+    for ev in events:
+        key = key_fn(ev)
+        if key not in groups:
+            groups[key] = agg.empty()
+        groups[key] = agg.combine(groups[key], agg.insert(ev))
+        yield {k: agg.extract(acc) for k, acc in groups.items()}
 
 
 def group_by[M, R, K](
@@ -26,9 +58,15 @@ def group_by[M, R, K](
     agg: Aggregator[M, R],
     events: Iterable[Event],
 ) -> dict[K, R]:
-    """Given a key function and an aggregator, we group events by key and fold each group independently.
+    """Return the final per-key result dict after all events have been processed.
+
+    Equivalent to last(stream_group_by(key_fn, agg, events)). Returns an empty dict for an empty stream.
     """
 
-    groups: dict[K, list[Event]] = defaultdict(list)
+    groups: dict[K, M] = {}
     for ev in events:
-        groups[key_fn(ev)].append(ev)
+        key = key_fn(ev)
+        if key not in groups:
+            groups[key] = agg.empty()
+        groups[key] = agg.combine(groups[key], agg.insert(ev))
+    return {k: agg.extract(acc) for k, acc in groups.items()}

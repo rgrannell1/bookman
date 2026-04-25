@@ -20,3 +20,5 @@ The second part is the named aggregator zoo, grouped by result type:
 - Time series: `series` — collects `(at, value)` pairs into a `Series`
 
 The project is a UV-based Python package named `bookman`, using the `rs` build system. The first implementation milestone covers the primitive types (`src/bookman/primitives.py`) and the flat event type (`src/bookman/events.py`). Primitives are `Counter` (with `Delta` and `Cumulative` variants), `Gauge`, `Message`, `Boolean`, and `Categorical`. An `Event` is a flat record with `at` and `until` timestamps, a `value` of any primitive type, and a `dims` multimap of string keys to lists of strings. These two modules are the foundation all aggregation logic will build on.
+
+The library is built for live data. Events arrive one at a time and the library updates its results continuously. Each new event is folded into whatever has already been computed; nothing is replayed. The runner accepts events one at a time and produces an updated result after each one.

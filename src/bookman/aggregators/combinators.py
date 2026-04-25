@@ -5,7 +5,7 @@ from functools import partial
 
 from bookman.events import Event
 from bookman.aggregators.aggregator import Aggregator
-from bookman.bookman_types import Temporality
+from bookman.bookman_types import Scalar, Series, Temporality, Timestamp
 
 
 def _map_insert_apply(original_insert: Callable, fn: Callable, ev: Event):
@@ -78,6 +78,26 @@ def _zip_temporality(agg1: Aggregator, agg2: Aggregator) -> Temporality:
             f"Cannot zip aggregators with different temporalities: {agg1.temporality!r} and {agg2.temporality!r}"
         )
     return agg1.temporality
+
+
+def _to_scalar(value) -> Scalar:
+    return Scalar(float(value))
+
+
+def _to_series(pairs: list[tuple[Timestamp, float]]) -> Series:
+    return Series([(ts, float(val)) for ts, val in pairs])
+
+
+def as_scalar[M, R](agg: Aggregator[M, R]) -> Aggregator[M, Scalar]:
+    """Lift an aggregator's numeric result into a Scalar for export."""
+
+    return map_extract(_to_scalar, agg)
+
+
+def as_series[M, R](agg: Aggregator[M, R]) -> Aggregator[M, Series]:
+    """Lift an aggregator's (timestamp, value) list result into a Series for export."""
+
+    return map_extract(_to_series, agg)
 
 
 def zip_agg[M, N, R, S](
