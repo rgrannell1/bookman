@@ -1,6 +1,6 @@
 """Telemetry event primitives and constructors."""
 
-from bookman.events.primitives import (
+from bookman.bookman_types import (
     Timestamp,
     Duration,
     TimeUnit,

@@ -1,6 +1,6 @@
 """Constants used across the events subpackage."""
 
-from bookman.events.primitives import TimeUnit
+from bookman.bookman_types import TimeUnit
 
 # Multiplication factors to convert seconds into each supported time unit
 _TIME_UNIT_FACTORS: dict[TimeUnit, float] = {

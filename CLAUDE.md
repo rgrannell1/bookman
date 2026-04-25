@@ -24,7 +24,7 @@ We back ../zahir2 as the monitoring system
 - Factor out complex type definitions into named type definitions.
 - Add short descriptions to each file of the intent of the contents
 - Factor out shared test setup code to a conftest.py
-- Factor out types to <package_name>_types.py
+- All types live in `bookman_types.py` at the package root. Do not create per-subpackage type files.
 - Avoid using python lambdas, except in .sort(). never use multiple lambdas in one call
 
 **Testing**
