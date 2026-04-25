@@ -52,9 +52,9 @@ composition — users never interact with this structure directly; they see a hu
 instead.
 
 ```
-Aggregator M R = (prepare : Event → M,  combine : M → M → M,  empty : M,  present : M → R)
+Aggregator M R = (insert : Event → M,  combine : M → M → M,  empty : M,  extract : M → R)
 
-fold agg xs = agg.present (fold agg.combine agg.empty (map agg.prepare xs))
+fold agg xs = agg.extract (fold agg.combine agg.empty (map agg.insert xs))
 ```
 
 Non-commutative monoids are permitted — ordered aggregations (last-seen value, message sequences,
@@ -78,11 +78,11 @@ groupBy (head . .dims["parent"])
 The triple is closed under these operations:
 
 ```
-contramap f agg    -- pre-process inputs,  replaces prepare
-fmap g agg         -- post-process output, changes R
-zip agg1 agg2      -- run two aggregators in parallel over the same input, produce (R, S)
-filter p agg       -- skip non-matching inputs via the monoid identity
-sample k agg       -- augment with a reservoir sample of k inputs, produce (R, [Event])
+map_insert f agg      -- pre-process inputs before insert
+map_extract g agg     -- post-process output after extract, changes R
+zip agg1 agg2         -- run two aggregators in parallel over the same input, produce (R, S)
+filter p agg          -- skip non-matching inputs via the monoid identity
+sample k agg          -- augment with a reservoir sample of k inputs, produce (R, [Event])
 ```
 
 `sample` is a combinator, not a primitive — it works on any aggregator. A reservoir of size `k`
@@ -92,10 +92,10 @@ on any aggregation, composably.
 
 ```
 sample k agg = Aggregator {
-  prepare = ev -> (agg.prepare ev, reservoir [ev])
+  insert  = ev -> (agg.insert ev, reservoir [ev])
   combine = (m1, r1) (m2, r2) -> (agg.combine m1 m2, merge_reservoir k r1 r2)
   empty   = (agg.empty, reservoir [])
-  present = (m, r) -> (agg.present m, r.events)
+  extract = (m, r) -> (agg.extract m, r.events)
 }
 ```
 
@@ -112,10 +112,10 @@ filter (ev -> ev.until > ev.at)
 filter (ev -> "error" ∈ ev.dims["tag"])
 
 -- span duration
-prepare = ev -> ev.until - ev.at
+insert = ev -> ev.until - ev.at
 
 -- time series
-prepare = ev -> (ev.at, ev.value)
+insert = ev -> (ev.at, ev.value)
 
 -- rate from delta counters
 filter (ev -> ev.value is Delta) |> sum |> per_second
@@ -123,7 +123,7 @@ filter (ev -> ev.value is Delta) |> sum |> per_second
 
 ## Results
 
-`present` maps each aggregator's internal monoid to a `Result`:
+`extract` maps each aggregator's internal monoid to a `Result`:
 
 ```
 Result =
