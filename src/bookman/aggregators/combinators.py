@@ -94,22 +94,6 @@ def zip_agg[M, N, R, S](
     )
 
 
-def _zip_all_insert(aggs: list[Aggregator], ev: Event) -> list:
-    return [agg.insert(ev) for agg in aggs]
-
-
-def _zip_all_combine(aggs: list[Aggregator], accs1: list, accs2: list) -> list:
-    return [agg.combine(acc1, acc2) for agg, acc1, acc2 in zip(aggs, accs1, accs2)]
-
-
-def _zip_all_empty(aggs: list[Aggregator]) -> list:
-    return [agg.empty() for agg in aggs]
-
-
-def _zip_all_extract(aggs: list[Aggregator], accs: list) -> list:
-    return [agg.extract(acc) for agg, acc in zip(aggs, accs)]
-
-
 def _zip_all_temporality(aggs: list[Aggregator]) -> Temporality:
     temporalities = {agg.temporality for agg in aggs}
     if len(temporalities) > 1:
@@ -126,9 +110,9 @@ def zip_all(aggs: list[Aggregator]) -> Aggregator:
         raise ValueError("zip_all requires at least one aggregator")
 
     return Aggregator(
-        insert=partial(_zip_all_insert, aggs),
-        combine=partial(_zip_all_combine, aggs),
-        empty=partial(_zip_all_empty, aggs),
-        extract=partial(_zip_all_extract, aggs),
+        insert=lambda ev: [agg.insert(ev) for agg in aggs],
+        combine=lambda accs1, accs2: [agg.combine(acc1, acc2) for agg, acc1, acc2 in zip(aggs, accs1, accs2)],
+        empty=lambda: [agg.empty() for agg in aggs],
+        extract=lambda accs: [agg.extract(acc) for agg, acc in zip(aggs, accs)],
         temporality=_zip_all_temporality(aggs),
     )
