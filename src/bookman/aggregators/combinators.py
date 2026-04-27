@@ -92,3 +92,43 @@ def zip_agg[M, N, R, S](
         extract=partial(_zip_extract, agg1, agg2),
         temporality=_zip_temporality(agg1, agg2),
     )
+
+
+def _zip_all_insert(aggs: list[Aggregator], ev: Event) -> list:
+    return [agg.insert(ev) for agg in aggs]
+
+
+def _zip_all_combine(aggs: list[Aggregator], accs1: list, accs2: list) -> list:
+    return [agg.combine(acc1, acc2) for agg, acc1, acc2 in zip(aggs, accs1, accs2)]
+
+
+def _zip_all_empty(aggs: list[Aggregator]) -> list:
+    return [agg.empty() for agg in aggs]
+
+
+def _zip_all_extract(aggs: list[Aggregator], accs: list) -> list:
+    return [agg.extract(acc) for agg, acc in zip(aggs, accs)]
+
+
+def _zip_all_temporality(aggs: list[Aggregator]) -> Temporality:
+    temporalities = {agg.temporality for agg in aggs}
+    if len(temporalities) > 1:
+        raise ValueError(
+            f"Cannot zip aggregators with different temporalities: {temporalities!r}"
+        )
+    return next(iter(temporalities))
+
+
+def zip_all(aggs: list[Aggregator]) -> Aggregator:
+    """Run a list of aggregators in parallel over the same events, producing a list of results."""
+
+    if not aggs:
+        raise ValueError("zip_all requires at least one aggregator")
+
+    return Aggregator(
+        insert=partial(_zip_all_insert, aggs),
+        combine=partial(_zip_all_combine, aggs),
+        empty=partial(_zip_all_empty, aggs),
+        extract=partial(_zip_all_extract, aggs),
+        temporality=_zip_all_temporality(aggs),
+    )
