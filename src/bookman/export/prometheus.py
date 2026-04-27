@@ -26,7 +26,7 @@ def _series_lines(name: str, result: Series, labels_str: str) -> list[str]:
         _format_line(name, labels_str, value, int(ts * 1000))
         for ts, value in result.points
     ]
-    return [f"# TYPE {name} gauge"] + data_lines
+    return [f"# TYPE {name} gauge", *data_lines]
 
 
 def to_prometheus(

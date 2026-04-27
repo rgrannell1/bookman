@@ -3,9 +3,9 @@
 from collections.abc import Callable
 from functools import partial
 
-from bookman.events import Event
 from bookman.aggregators.aggregator import Aggregator
 from bookman.bookman_types import Temporality
+from bookman.events import Event
 
 
 def _map_insert_apply(original_insert: Callable, fn: Callable, ev: Event):
@@ -111,8 +111,8 @@ def zip_all(aggs: list[Aggregator]) -> Aggregator:
 
     return Aggregator(
         insert=lambda ev: [agg.insert(ev) for agg in aggs],
-        combine=lambda accs1, accs2: [agg.combine(acc1, acc2) for agg, acc1, acc2 in zip(aggs, accs1, accs2)],
+        combine=lambda accs1, accs2: [agg.combine(acc1, acc2) for agg, acc1, acc2 in zip(aggs, accs1, accs2, strict=False)],
         empty=lambda: [agg.empty() for agg in aggs],
-        extract=lambda accs: [agg.extract(acc) for agg, acc in zip(aggs, accs)],
+        extract=lambda accs: [agg.extract(acc) for agg, acc in zip(aggs, accs, strict=False)],
         temporality=_zip_all_temporality(aggs),
     )

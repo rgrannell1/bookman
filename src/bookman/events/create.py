@@ -2,8 +2,8 @@
 
 import time
 
-from bookman.events.events import Event
 from bookman.bookman_types import Dims, Primitive, Timestamp
+from bookman.events.events import Event
 
 
 def point(

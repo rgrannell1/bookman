@@ -3,8 +3,7 @@
 from operator import itemgetter
 
 from bookman.aggregators.aggregator import Aggregator
-from bookman.bookman_types import Counter, Delta, Cumulative, Timestamp
-
+from bookman.bookman_types import Counter, Cumulative, Delta, Timestamp
 
 # series
 

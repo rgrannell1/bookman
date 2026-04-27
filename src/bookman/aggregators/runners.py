@@ -6,11 +6,11 @@ The batch runners (fold, group_by) are convenience wrappers that return the fina
 
 from collections.abc import Callable, Generator, Iterable
 
-from bookman.events import Event
 from bookman.aggregators.aggregator import Aggregator
+from bookman.events import Event
 
 
-def stream[M, R](agg: Aggregator[M, R], events: Iterable[Event]) -> Generator[R, None, None]:
+def stream[M, R](agg: Aggregator[M, R], events: Iterable[Event]) -> Generator[R]:
     """Yield an updated result after each event, maintaining a running accumulator.
 
     This is the primary runner. fold is derived from it.
@@ -38,7 +38,7 @@ def stream_group_by[M, R, K](
     key_fn: Callable[[Event], K],
     agg: Aggregator[M, R],
     events: Iterable[Event],
-) -> Generator[dict[K, R], None, None]:
+) -> Generator[dict[K, R]]:
     """Yield an updated per-key result dict after each event, maintaining a running accumulator per key.
 
     This is the primary grouped runner. group_by is derived from it.

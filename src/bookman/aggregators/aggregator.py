@@ -1,10 +1,10 @@
 """The Aggregator type: a composable quadruple for reducing collections of Events."""
 
-from dataclasses import dataclass
 from collections.abc import Callable
+from dataclasses import dataclass
 
-from bookman.events import Event
 from bookman.bookman_types import Temporality
+from bookman.events import Event
 
 
 @dataclass(frozen=True)

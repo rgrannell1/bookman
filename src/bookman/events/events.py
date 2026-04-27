@@ -1,6 +1,7 @@
 """The Event type: the single unit of emitted telemetry data in bookman."""
 
 from typing import NamedTuple
+
 from bookman.bookman_types import Dims, Duration, EventKind, Primitive, Timestamp, TimeUnit
 from bookman.events.constants import _TIME_UNIT_FACTORS
 

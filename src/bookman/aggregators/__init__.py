@@ -1,30 +1,30 @@
 """Aggregators and combinators for reducing collections of events."""
 
-from bookman.bookman_types import Temporality
 from bookman.aggregators.aggregator import Aggregator
-from bookman.aggregators.runners import fold, group_by, stream, stream_group_by
-from bookman.aggregators.combinators import map_insert, map_extract, filter_events, zip_agg, zip_all
+from bookman.aggregators.combinators import filter_events, map_extract, map_insert, zip_agg, zip_all
 from bookman.aggregators.results import as_scalar, as_series
-from bookman.aggregators.zoo import series, running_sum, distinct, count_distinct, count, mean
+from bookman.aggregators.runners import fold, group_by, stream, stream_group_by
+from bookman.aggregators.zoo import count, count_distinct, distinct, mean, running_sum, series
+from bookman.bookman_types import Temporality
 
 __all__ = [
-    "Temporality",
     "Aggregator",
-    "fold",
-    "group_by",
-    "stream",
-    "stream_group_by",
-    "map_insert",
-    "map_extract",
-    "filter_events",
-    "zip_agg",
-    "zip_all",
+    "Temporality",
     "as_scalar",
     "as_series",
-    "series",
-    "running_sum",
-    "distinct",
-    "count_distinct",
     "count",
+    "count_distinct",
+    "distinct",
+    "filter_events",
+    "fold",
+    "group_by",
+    "map_extract",
+    "map_insert",
     "mean",
+    "running_sum",
+    "series",
+    "stream",
+    "stream_group_by",
+    "zip_agg",
+    "zip_all",
 ]
