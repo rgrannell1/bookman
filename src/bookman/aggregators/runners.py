@@ -50,7 +50,7 @@ def stream_group_by[M, R, K](
         if key not in groups:
             groups[key] = agg.empty()
         groups[key] = agg.combine(groups[key], agg.insert(ev))
-        yield {k: agg.extract(acc) for k, acc in groups.items()}
+        yield {key: agg.extract(acc) for key, acc in groups.items()}
 
 
 def group_by[M, R, K](
@@ -69,4 +69,4 @@ def group_by[M, R, K](
         if key not in groups:
             groups[key] = agg.empty()
         groups[key] = agg.combine(groups[key], agg.insert(ev))
-    return {k: agg.extract(acc) for k, acc in groups.items()}
+    return {key: agg.extract(acc) for key, acc in groups.items()}
